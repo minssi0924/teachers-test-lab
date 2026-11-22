@@ -1,3 +1,4 @@
+app = Flask(__name__)
 import os, json, base64, uuid, re
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_file

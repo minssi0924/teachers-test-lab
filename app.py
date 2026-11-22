@@ -23,14 +23,7 @@ load_dotenv()
 
 app = Flask(__name__)
 from werkzeug.utils import secure_filename
-from openai import OpenAI
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-from reportlab.lib.enums import TA_CENTER
-from reportlab.lib import colors
+
 
 APP_DIR = Path(__file__).resolve().parent
 UPLOAD_DIR = APP_DIR / "uploads"
@@ -38,7 +31,6 @@ OUTPUT_DIR = APP_DIR / "outputs"
 UPLOAD_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR.mkdir(exist_ok=True)
 ALLOWED = {"png", "jpg", "jpeg", "webp", "pdf"}
-app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
 
 def client():

@@ -157,7 +157,7 @@ def analyze_style():
             except Exception:
                 return jsonify(error="이미지를 읽을 수 없습니다. JPG, PNG, WEBP 사진을 확인해 주세요."), 400
 
-            try:
+    
     p = save_optimized_image(f)
     paths.append(p)
 except Exception:

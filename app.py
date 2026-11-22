@@ -149,7 +149,7 @@ def index():
 
 @app.post("/api/analyze-style")
 def analyze_style():
-    
+    try:
         uploads = request.files.getlist("files")
         paths = []
 
@@ -158,6 +158,7 @@ def analyze_style():
                 continue
 
             ext = Path(f.filename).suffix.lower().lstrip(".")
+
             if ext not in ALLOWED:
                 continue
 
@@ -170,26 +171,22 @@ def analyze_style():
         if not paths:
             return jsonify(error="시험지 사진을 한 장 이상 업로드해 주세요."), 400
 
-
-    
-    p = save_optimized_image(f)
-    paths.append(p)
-except Exception:
-    return jsonify(error="이미지를 읽을 수 없습니다. JPG, PNG, WEBP 사진을 확인해 주세요."), 400
-        if not paths: return jsonify(error="시험지 사진을 한 장 이상 업로드해 주세요."),400
-        prompt="""너는 평가문항 분석 전문가다. 첨부된 기존 시험지 이미지를 읽고 출제자의 관찰 가능한 출제 스타일을 분석하라.
+        prompt = """너는 평가문항 분석 전문가다. 첨부된 기존 시험지 이미지를 읽고 출제자의 관찰 가능한 출제 스타일을 분석하라.
 추측은 추측이라고 표시하고, 이미지에서 읽히지 않는 부분은 불명확하다고 밝혀라. 선생님의 성격이나 신원을 추정하지 말고 문항의 형식만 분석하라.
 JSON 객체만 출력하라. 형식:
 {"profile_name":"내 선생님","summary":"요약","question_types":[{"type":"객관식/서술형 등","estimated_share":"비율 또는 추정","features":"특징"}],"difficulty":"난이도 설명","distractor_style":"오답 선지 특징","wording":"질문 표현 특징","topic_selection":"세부 개념/자료 활용 특징","patterns":["관찰된 특징"],"uncertainties":["판독 한계"],"generation_rules":["새 시험지에 적용할 규칙"]}"""
-        result=extract_json(ask_ai(prompt,paths))
+
+        result = extract_json(ask_ai(prompt, paths))
         return jsonify(result)
+
     except Exception as e:
-        return jsonify(error=str(e)),500
+        return jsonify(error=str(e)), 500
+
+
 
 @app.post("/api/generate")
 def generate():
-    
-            
+    try:
         uploads = request.files.getlist("files")
         paths = []
 
@@ -198,6 +195,7 @@ def generate():
                 continue
 
             ext = Path(f.filename).suffix.lower().lstrip(".")
+
             if ext not in {"png", "jpg", "jpeg", "webp"}:
                 continue
 
@@ -207,27 +205,36 @@ def generate():
         if not paths:
             return jsonify(error="새 시험범위 사진을 업로드해 주세요."), 400
 
+        style = request.form.get("style", "")
+        count = max(5, min(40, int(request.form.get("count", "15"))))
+        question_types = request.form.get("types", "객관식, 단답형, 서술형")
 
-        style=request.form.get("style","")
-        count=max(5,min(40,int(request.form.get("count", "15"))))
-        types=request.form.get("types","객관식, 단답형, 서술형")
-        prompt=f"""너는 교사가 사용하는 평가문항 개발 전문가다. 첨부한 이미지는 새 시험범위 자료다.
+        prompt = f"""너는 교사가 사용하는 평가문항 개발 전문가다. 첨부한 이미지는 새 시험범위 자료다.
 아래의 출제 스타일 분석을 참고하되 문항과 정답은 새 시험범위 내용에 근거해 독창적으로 작성하라.
 스타일 분석(참고): {style}
-문제 수: {count}. 선호 유형: {types}.
+문제 수: {count}. 선호 유형: {question_types}.
 중요: 자료에 없는 사실을 정답 근거로 만들지 말고, 이미지 판독이 불확실하면 해당 내용을 출제하지 마라.
 문항마다 정답과 간결하지만 충분한 해설을 포함하라. 난이도도 표시하라.
 JSON 배열만 출력:
 [{{"number":1,"type":"객관식","difficulty":"중","question":"질문","choices":["① ...","② ...","③ ...","④ ..."],"answer":"정답","explanation":"해설","source_topic":"시험범위의 관련 개념"}}]
 객관식 외 유형은 choices를 빈 배열로 둔다. 객관식은 정답이 하나만 있도록 검토하고, 선택지는 서로 겹치지 않게 작성하라."""
-        result=extract_json(ask_ai(prompt,paths))
-        if isinstance(result,dict) and "raw" in result:
-            return jsonify(error="AI 응답을 문제 데이터로 변환하지 못했습니다. 다시 시도해 주세요.", raw=result["raw"]),500
-        if isinstance(result,dict) and "questions" in result: result=result["questions"]
-        if not isinstance(result,list): return jsonify(error="문제 생성 결과 형식이 올바르지 않습니다.", raw=result),500
+
+        result = extract_json(ask_ai(prompt, paths))
+
+        if isinstance(result, dict) and "raw" in result:
+            return jsonify(error="AI 응답을 문제 데이터로 변환하지 못했습니다.", raw=result["raw"]), 500
+
+        if isinstance(result, dict) and "questions" in result:
+            result = result["questions"]
+
+        if not isinstance(result, list):
+            return jsonify(error="문제 생성 결과 형식이 올바르지 않습니다.", raw=result), 500
+
         return jsonify(questions=result)
+
     except Exception as e:
-        return jsonify(error=str(e)),500
+        return jsonify(error=str(e)), 500
+
 
 @app.post("/api/export")
 def export_pdf():

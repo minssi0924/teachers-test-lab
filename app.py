@@ -1,9 +1,27 @@
 app = Flask(__name__)
-import os, json, base64, uuid, re
+import os
+import json
+import base64
+import uuid
+import re
+
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_file
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
+from openai import OpenAI
+
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib import colors
+
 load_dotenv()
+
+app = Flask(__name__)
 from werkzeug.utils import secure_filename
 from openai import OpenAI
 from reportlab.lib.pagesizes import A4

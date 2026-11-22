@@ -42,10 +42,10 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
 
 def client():
-    key = os.getenv("OPENAI_API_KEY")
+    key = os.getenv("GEMINI_API_KEY")
     if not key:
-        raise RuntimeError("OPENAI_API_KEY가 설정되지 않았습니다. .env.example을 참고해 주세요.")
-    return OpenAI(api_key=key)
+        raise RuntimeError("GEMINI_API_KEY가 설정되지 않았습니다.")
+    return genai.Client(api_key=key)
 
 def file_to_data_url(path):
     ext = path.suffix.lower()
@@ -56,14 +56,36 @@ def file_to_data_url(path):
     return f"data:{mime};base64,{encoded}"
 
 def ask_ai(prompt, paths):
-    content = [{"type":"input_text","text":prompt}]
+    content = [prompt]
+
     for p in paths:
-        content.append({"type":"input_image","image_url":file_to_data_url(p),"detail":"high"})
-    response = client().responses.create(
-        model=os.getenv("OPENAI_MODEL","gpt-4.1"),
-        input=[{"role":"user","content":content}]
+        ext = p.suffix.lower()
+        mime = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".webp": "image/webp"
+        }.get(ext)
+
+        if not mime:
+            raise ValueError("지원하지 않는 이미지 형식입니다.")
+
+        content.append(
+            types.Part.from_bytes(
+                data=p.read_bytes(),
+                mime_type=mime
+            )
+        )
+
+    response = client().models.generate_content(
+        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite"),
+        contents=content,
+        config={
+            "response_mime_type": "application/json"
+        }
     )
-    return response.output_text
+
+    return response.text
 
 def extract_json(text):
     match = re.search(r"\{.*\}", text, re.S)

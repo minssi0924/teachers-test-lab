@@ -108,6 +108,7 @@ def extract_json(text):
                 pass
 
     return {"raw": text}
+@app.route("/")
 def index():
     return render_template("index.html")
 

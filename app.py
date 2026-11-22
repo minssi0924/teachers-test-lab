@@ -52,6 +52,7 @@ def ask_ai(prompt, paths):
 
     for p in paths:
         ext = p.suffix.lower()
+
         mime = {
             ".png": "image/png",
             ".jpg": "image/jpeg",
@@ -69,15 +70,21 @@ def ask_ai(prompt, paths):
             )
         )
 
-    response = client().models.generate_content(
-        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite"),
-        contents=content,
-        config={
-            "response_mime_type": "application/json"
-        }
-    )
+    ai_client = client()
 
-    return response.text
+    try:
+        response = ai_client.models.generate_content(
+            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite"),
+            contents=content,
+            config={
+                "response_mime_type": "application/json"
+            }
+        )
+
+        return response.text
+
+    finally:
+        ai_client.close()
 
 def extract_json(text):
     text = text.strip()

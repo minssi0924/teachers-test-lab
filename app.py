@@ -158,8 +158,11 @@ def analyze_style():
             if ext not in ALLOWED: continue
             if ext == "pdf":
                 return jsonify(error="현재 버전은 JPG, PNG, WEBP 이미지 업로드를 지원합니다. PDF 시험지는 페이지를 이미지로 변환해 업로드해 주세요."), 400
-            p=UPLOAD_DIR/(uuid.uuid4().hex+"_"+secure_filename(f.filename))
-            f.save(p); paths.append(p)
+            try:
+    p = save_optimized_image(f)
+    paths.append(p)
+except Exception:
+    return jsonify(error="이미지를 읽을 수 없습니다. JPG, PNG, WEBP 사진을 확인해 주세요."), 400
         if not paths: return jsonify(error="시험지 사진을 한 장 이상 업로드해 주세요."),400
         prompt="""너는 평가문항 분석 전문가다. 첨부된 기존 시험지 이미지를 읽고 출제자의 관찰 가능한 출제 스타일을 분석하라.
 추측은 추측이라고 표시하고, 이미지에서 읽히지 않는 부분은 불명확하다고 밝혀라. 선생님의 성격이나 신원을 추정하지 말고 문항의 형식만 분석하라.
@@ -179,8 +182,11 @@ def generate():
             if not f.filename: continue
             ext=Path(f.filename).suffix.lower().lstrip(".")
             if ext not in {"png","jpg","jpeg","webp"}: continue
-            p=UPLOAD_DIR/(uuid.uuid4().hex+"_"+secure_filename(f.filename))
-            f.save(p); paths.append(p)
+            try:
+    p = save_optimized_image(f)
+    paths.append(p)
+except Exception:
+    return jsonify(error="이미지를 읽을 수 없습니다. JPG, PNG, WEBP 사진을 확인해 주세요."), 400
         if not paths: return jsonify(error="새 시험범위 사진을 업로드해 주세요."),400
         style=request.form.get("style","")
         count=max(5,min(40,int(request.form.get("count", "15"))))

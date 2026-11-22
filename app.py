@@ -1,4 +1,3 @@
-app = Flask(__name__)
 import os
 import json
 import base64

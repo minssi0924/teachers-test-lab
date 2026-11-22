@@ -31,7 +31,7 @@ OUTPUT_DIR = APP_DIR / "outputs"
 UPLOAD_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR.mkdir(exist_ok=True)
 ALLOWED = {"png", "jpg", "jpeg", "webp", "pdf"}
-app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 
 def client():
     key = os.getenv("GEMINI_API_KEY")
@@ -107,6 +107,11 @@ def extract_json(text):
                 pass
 
     return {"raw": text}
+@app.errorhandler(413)
+def too_large(e):
+    return jsonify(
+        error="업로드한 파일의 전체 용량이 너무 큽니다. 사진 용량을 줄이거나 파일 수를 줄여 주세요."
+    ), 413
 @app.route("/")
 def index():
     return render_template("index.html")

@@ -8,7 +8,8 @@ from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_file
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
-from openai import OpenAI
+from google import genai
+from google.genai import types
 
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak

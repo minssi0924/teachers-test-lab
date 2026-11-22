@@ -74,7 +74,7 @@ def ask_ai(prompt, paths):
 
     try:
         response = ai_client.models.generate_content(
-            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite"),
+            model=os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"),
             contents=content,
             config={
                 "response_mime_type": "application/json"

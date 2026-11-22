@@ -3,6 +3,7 @@ import json
 import base64
 import uuid
 import re
+from PIL import Image, ImageOps
 
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_file
@@ -30,6 +31,36 @@ UPLOAD_DIR = APP_DIR / "uploads"
 OUTPUT_DIR = APP_DIR / "outputs"
 UPLOAD_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR.mkdir(exist_ok=True)
+
+def save_optimized_image(file):
+    """업로드된 이미지를 자동으로 축소하고 압축한다."""
+    image = Image.open(file.stream)
+
+    # 사진 방향 보정
+    image = ImageOps.exif_transpose(image)
+
+    # 최대 크기 1800 x 1800
+    image.thumbnail((1800, 1800), Image.Resampling.LANCZOS)
+
+    # JPEG 저장을 위해 RGB로 변환
+    if image.mode != "RGB":
+        image = image.convert("RGB")
+
+    # 고유한 파일명으로 저장
+    filename = uuid.uuid4().hex + ".jpg"
+    path = UPLOAD_DIR / filename
+
+    # 이미지 압축
+    image.save(
+        path,
+        format="JPEG",
+        quality=82,
+        optimize=True,
+        progressive=True
+    )
+
+    return path
+    
 ALLOWED = {"png", "jpg", "jpeg", "webp", "pdf"}
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 

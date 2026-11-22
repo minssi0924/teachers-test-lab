@@ -88,13 +88,26 @@ def ask_ai(prompt, paths):
     return response.text
 
 def extract_json(text):
-    match = re.search(r"\{.*\}", text, re.S)
-    if not match:
-        return {"raw": text}
-    try: return json.loads(match.group(0))
-    except json.JSONDecodeError: return {"raw": text}
+    text = text.strip()
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
 
-@app.route("/")
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    for start, end in [("[", "]"), ("{", "}")]:
+        first = text.find(start)
+        last = text.rfind(end)
+
+        if first != -1 and last > first:
+            try:
+                return json.loads(text[first:last + 1])
+            except json.JSONDecodeError:
+                pass
+
+    return {"raw": text}
 def index():
     return render_template("index.html")
 

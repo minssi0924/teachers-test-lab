@@ -150,14 +150,13 @@ def index():
 @app.post("/api/analyze-style")
 def analyze_style():
     try:
-        uploads = request.files.getlist("files")
-        paths=[]
-        for f in uploads:
-            if not f.filename: continue
-            ext=Path(f.filename).suffix.lower().lstrip(".")
-            if ext not in ALLOWED: continue
-            if ext == "pdf":
-                return jsonify(error="현재 버전은 JPG, PNG, WEBP 이미지 업로드를 지원합니다. PDF 시험지는 페이지를 이미지로 변환해 업로드해 주세요."), 400
+    
+            try:
+                p = save_optimized_image(f)
+                paths.append(p)
+            except Exception:
+                return jsonify(error="이미지를 읽을 수 없습니다. JPG, PNG, WEBP 사진을 확인해 주세요."), 400
+
             try:
     p = save_optimized_image(f)
     paths.append(p)
@@ -175,18 +174,13 @@ JSON 객체만 출력하라. 형식:
 
 @app.post("/api/generate")
 def generate():
-    try:
-        uploads=request.files.getlist("files")
-        paths=[]
-        for f in uploads:
-            if not f.filename: continue
-            ext=Path(f.filename).suffix.lower().lstrip(".")
-            if ext not in {"png","jpg","jpeg","webp"}: continue
+    
             try:
-    p = save_optimized_image(f)
-    paths.append(p)
-except Exception:
-    return jsonify(error="이미지를 읽을 수 없습니다. JPG, PNG, WEBP 사진을 확인해 주세요."), 400
+                p = save_optimized_image(f)
+                paths.append(p)
+            except Exception:
+                return jsonify(error="이미지를 읽을 수 없습니다. JPG, PNG, WEBP 사진을 확인해 주세요."), 400
+
         if not paths: return jsonify(error="새 시험범위 사진을 업로드해 주세요."),400
         style=request.form.get("style","")
         count=max(5,min(40,int(request.form.get("count", "15"))))
